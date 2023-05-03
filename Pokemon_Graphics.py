@@ -26,7 +26,7 @@ def delay_print(s):
 
 class Pokemon:
 
-    def __init__(self, name, types, moves, EVs, health='=================='):
+    def __init__(self, game_instance, name, types, moves, EVs, health='=================='):
         # save variables as attributes
 
         self.name = name
@@ -43,6 +43,12 @@ class Pokemon:
         # Amount of health bars
 
         self.bars = 20
+        self.game_instance = game_instance
+
+    def update_screen(self, health):
+        self.game_instance.display_images()
+        pygame.draw.rect(self.game_instance.game_window, (0, 255, 0), [160, 180, len(health) * 10, 15])
+        pygame.display.update()
 
     def fight(self, Pokemon2):
         # Allow two Pokemon to fight each other
@@ -123,11 +129,18 @@ class Pokemon:
         # Now for the actual fighting...
         # Continue while Pokemon still have health
         while (self.bars > 0) and (Pokemon2.bars > 0):
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
 
             # Print the health of both Pokemon
             print(f"{self.name}\t\tHEALTH\t{self.health}")
 
             print(f"{Pokemon2.name}\t\tHEALTH\t{Pokemon2.health}\n")
+
+            self.update_screen(self.health)
+            pygame.display.update()
 
             print(f"Go {self.name}!")
 
@@ -158,7 +171,8 @@ class Pokemon:
             print(f"{self.name}\t\tHEALTH\t{self.health}")
 
             print(f"{Pokemon2.name}\t\tHEALTH\t{Pokemon2.health}\n")
-
+            self.update_screen(self.health)
+            pygame.display.update()
             time.sleep(.5)
 
             # Check to see if Pokemon fainted
@@ -169,7 +183,6 @@ class Pokemon:
                 break
 
             # Pokemon2s turn
-
             print(f"Go {Pokemon2.name}!")
 
             for i, x in enumerate(Pokemon2.moves):
@@ -199,7 +212,8 @@ class Pokemon:
             print(f"{self.name}\t\tHEALTH\t{self.health}")
 
             print(f"{Pokemon2.name}\t\tHEALTH\t{Pokemon2.health}\n")
-
+            self.update_screen(self.health)
+            pygame.display.update()
             time.sleep(.5)
 
             # Check to see if Pokemon fainted
@@ -228,7 +242,7 @@ class GameInstance:
         self.enemey_health = (140,150)
         self.poke_pos = (150, 350)
         self.poke_health = (340,350)
-        self.images = {
+        self.pokemon = {
             'prinplup': {'path': 'assets/prinplup.png', 'size': (164, 164), 'pos': self.poke_pos},
             'grotle': {'path': 'assets/grotle.png', 'size': (164, 164), 'pos': self.enemey_poke_pos},
             'combusken': {'path': 'assets/combusken.png', 'size': (64, 64), 'pos': (0, 0)},
@@ -238,16 +252,29 @@ class GameInstance:
             'blaziken': {'path': 'assets/blaziken.png', 'size': (64, 64), 'pos': (0, 0)},
             'empoleon': {'path': 'assets/empoleon.png', 'size': (64, 64), 'pos': (0, 0)},
             'torterra': {'path': 'assets/torterra.png', 'size': (64, 64), 'pos': (0, 0)},
+
+        }
+        self.images = {
             'health_enemey': {'path': 'assets/health_bar.png', 'size': (240, 80), 'pos': self.enemey_health},
             'health_player': {'path': 'assets/health_bar.png', 'size': (240, 80), 'pos': self.poke_health},
         }
         pygame.display.set_caption('Pokemans')
 
+        self.Prinplup = Pokemon(self, 'Prinplup', 'Water', ['Bubble Beam', 'Swagger', 'Fury Attack', 'Brine'],
+                           {'ATTACK': 5, 'DEFENSE': 5})
+
+        self.Grotle = Pokemon(self, 'Grotle', 'Grass', ['Curse', 'Bite', 'Mega Drain', 'Leech Seed'], {'ATTACK': 4, 'DEFENSE': 6})
+
     def game_loop(self):
 
-        while True:
-            self.display_images()
+        # Select pokemon
+        pokemon = ('grotle', 'prinplup')
+        for key, value in self.pokemon.items():
+            if key in pokemon:
+                self.images.update({key: value})
 
+        while True:
+            self.Grotle.fight(self.Prinplup)
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
@@ -263,40 +290,11 @@ class GameInstance:
         return images
 
     def display_images(self):
+        self.game_window.fill((255,255,255))
         for image in self.load_images():
             self.game_window.blit(image['surface'], image['pos'])
 
 
 if __name__ == '__main__':
-    # Create Pokemon
-
-    # Not Evolved
-
-    Torchic = Pokemon('Torchic', 'Fire', ['Growl', 'Scratch', 'Ember', 'Quick Attack'], {'ATTACK': 4, 'DEFENSE': 2})
-
-    Piplup = Pokemon('Piplup', 'Water', ['Hydro Pump', 'Drill Peck', 'mist', 'Whirlpool'], {'ATTACK': 3, 'DEFENSE': 3})
-
-    Turtwig = Pokemon('Turtwig', 'Grass', ['Razor Leaf', 'Bite', 'Leaf Storm', 'Crunch'], {'ATTACK': 2, 'DEFENSE': 4})
-
-    # First Evolution
-
-    Combusken = Pokemon('Combusken', 'Fire', ['Aerial Ace', 'Slash', 'Bounce', 'Focus Energy'],
-                        {'ATTACK': 6, 'DEFENSE': 5})
-
-    Prinplup = Pokemon('Prinplup', 'Water', ['Bubble Beam', 'Swagger', 'Fury Attack', 'Brine'],
-                       {'ATTACK': 5, 'DEFENSE': 5})
-
-    Grotle = Pokemon('Grotle', 'Grass', ['Curse', 'Bite', 'Mega Drain', 'Leech Seed'], {'ATTACK': 4, 'DEFENSE': 6})
-
-    # Second Evolution
-
-    Blaziken = Pokemon('Blaziken', 'Fire', ['Blaze Kick', 'Bulk up', 'Reversal', 'Flare Blitz'],
-                       {'ATTACK': 12, 'DEFENSE': 8})
-
-    Empoleon = Pokemon('Empoleon', 'Water', ['Whirlpool', 'Mist', 'Drill Peck', 'Hydro Pump'],
-                       {'ATTACK': 10, 'DEFENSE': 10})
-
-    Torterra = Pokemon('Torterra', 'Grass', ['Synthesis', 'Crunch', 'Giga Drain', 'Leaf Storm'],
-                       {'ATTACK': 8, 'DEFENSE': 12})
 
     GameInstance().game_loop()
