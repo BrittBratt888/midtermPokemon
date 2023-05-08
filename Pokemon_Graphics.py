@@ -11,6 +11,7 @@ from pygame.locals import QUIT
 
 # Delay printing
 
+game_won = False
 def delay_print(s):
     # print one character at a time
 
@@ -47,8 +48,24 @@ class Pokemon:
 
     def update_screen(self, health):
         self.game_instance.display_images()
-        pygame.draw.rect(self.game_instance.game_window, (0, 255, 0), [160, 180, len(health) * 10, 15])
+
+        pygame.draw.rect(self.game_instance.game_window, self.get_health_color(self.health), [160, 181, len(self.health) * 10, 15])
+
+        pygame.draw.rect(self.game_instance.game_window, self.get_health_color(health), [360, 381, len(health) * 9, 15])
+
+        self.game_instance.display_health_frames()
+
         pygame.display.update()
+
+    def get_health_color(self, health):
+        health = len(health)
+        print(health)
+        if health < 13:
+            return 252, 186, 3
+        if health < 6:
+            return 255, 0, 0
+        else:
+            return 0, 255, 0
 
     def fight(self, Pokemon2):
         # Allow two Pokemon to fight each other
@@ -139,7 +156,7 @@ class Pokemon:
 
             print(f"{Pokemon2.name}\t\tHEALTH\t{Pokemon2.health}\n")
 
-            self.update_screen(self.health)
+            self.update_screen(Pokemon2.health)
             pygame.display.update()
 
             print(f"Go {self.name}!")
@@ -171,7 +188,7 @@ class Pokemon:
             print(f"{self.name}\t\tHEALTH\t{self.health}")
 
             print(f"{Pokemon2.name}\t\tHEALTH\t{Pokemon2.health}\n")
-            self.update_screen(self.health)
+            self.update_screen(Pokemon2.health)
             pygame.display.update()
             time.sleep(.5)
 
@@ -212,7 +229,7 @@ class Pokemon:
             print(f"{self.name}\t\tHEALTH\t{self.health}")
 
             print(f"{Pokemon2.name}\t\tHEALTH\t{Pokemon2.health}\n")
-            self.update_screen(self.health)
+            self.update_screen(Pokemon2.health)
             pygame.display.update()
             time.sleep(.5)
 
@@ -226,6 +243,7 @@ class Pokemon:
         money = np.random.choice(5000)
 
         delay_print(f"Opponent paid you ${money}.")
+        return 0
 
 
 class GameInstance:
@@ -239,19 +257,19 @@ class GameInstance:
         self.game_window = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
 
         self.enemey_poke_pos = (450, 150)
-        self.enemey_health = (140,150)
+        self.enemey_health = (140, 150)
         self.poke_pos = (150, 350)
-        self.poke_health = (340,350)
+        self.poke_health = (340, 350)
         self.pokemon = {
             'prinplup': {'path': 'assets/prinplup.png', 'size': (164, 164), 'pos': self.poke_pos},
             'grotle': {'path': 'assets/grotle.png', 'size': (164, 164), 'pos': self.enemey_poke_pos},
-            'combusken': {'path': 'assets/combusken.png', 'size': (64, 64), 'pos': (0, 0)},
-            'torchic': {'path': 'assets/torchic.png', 'size': (64, 64), 'pos': (0, 0)},
-            'piplup': {'path': 'assets/piplup.png', 'size': (64, 64), 'pos': (0, 0)},
-            'turtwig': {'path': 'assets/turtwig.png', 'size': (64, 64), 'pos': (0, 0)},
-            'blaziken': {'path': 'assets/blaziken.png', 'size': (64, 64), 'pos': (0, 0)},
-            'empoleon': {'path': 'assets/empoleon.png', 'size': (64, 64), 'pos': (0, 0)},
-            'torterra': {'path': 'assets/torterra.png', 'size': (64, 64), 'pos': (0, 0)},
+            'combusken': {'path': 'assets/combusken.png', 'size': (164, 164), 'pos': (0, 0)},
+            'torchic': {'path': 'assets/torchic.png', 'size': (164, 614), 'pos': (0, 0)},
+            'piplup': {'path': 'assets/piplup.png', 'size': (164, 164), 'pos': (0, 0)},
+            'turtwig': {'path': 'assets/turtwig.png', 'size': (164, 164), 'pos': (0, 0)},
+            'blaziken': {'path': 'assets/blaziken.png', 'size': (164, 164), 'pos': (0, 0)},
+            'empoleon': {'path': 'assets/empoleon.png', 'size': (164, 164), 'pos': (0, 0)},
+            'torterra': {'path': 'assets/torterra.png', 'size': (164, 164), 'pos': (0, 0)},
 
         }
         self.images = {
@@ -261,9 +279,10 @@ class GameInstance:
         pygame.display.set_caption('Pokemans')
 
         self.Prinplup = Pokemon(self, 'Prinplup', 'Water', ['Bubble Beam', 'Swagger', 'Fury Attack', 'Brine'],
-                           {'ATTACK': 5, 'DEFENSE': 5})
+                                {'ATTACK': 5, 'DEFENSE': 5})
 
-        self.Grotle = Pokemon(self, 'Grotle', 'Grass', ['Curse', 'Bite', 'Mega Drain', 'Leech Seed'], {'ATTACK': 4, 'DEFENSE': 6})
+        self.Grotle = Pokemon(self, 'Grotle', 'Grass', ['Curse', 'Bite', 'Mega Drain', 'Leech Seed'],
+                              {'ATTACK': 4, 'DEFENSE': 6})
 
     def game_loop(self):
 
@@ -279,7 +298,7 @@ class GameInstance:
                 if event.type == QUIT:
                     pygame.quit()
                     sys.exit()
-            pygame.display.update()
+            return
 
     def load_images(self):
         images = []
@@ -290,11 +309,13 @@ class GameInstance:
         return images
 
     def display_images(self):
-        self.game_window.fill((255,255,255))
+        self.game_window.fill((255, 255, 255))
+        self.display_health_frames()
+
+    def display_health_frames(self):
         for image in self.load_images():
             self.game_window.blit(image['surface'], image['pos'])
 
 
 if __name__ == '__main__':
-
     GameInstance().game_loop()
